@@ -1,5 +1,5 @@
 # Movie-IMDB-Database-Search
-The following assignment shows the use of jQuery Mobile, JavaScript and AJAX. We had to create our own API key in the 
+The following assignment shows the use of jQuery Mobile, JavaScript and AJAX. We had to sign up to get our own API key in the 
 IMDB database. This assignment provided a significant amount of challenges, but overall I prooud with the end result. 
 
 Some challenges included
