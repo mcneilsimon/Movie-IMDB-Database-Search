@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Assignment N3 Template</title>
+    <meta http-equiv="Content-Security-Policy" />
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.js"></script>
+
+    <style>
+        .ui-listview,
+        .ui-listview>li {
+            padding-left: 0.25em;
+        }
+        
+        [data-role="footer"] {
+            margin-top: 20px;
+        }
+        
+        [data-role="content"] {
+            margin-top: 10px;
+        }
+        
+        div.ui-input-text {
+            margin: auto;
+            width: 600px !important
+        }
+    </style>
+
+</head>
+
+<body>
+    <!--data display for movie home page-->
+    <div data-role="page" id="home">
+        <div data-role="header">
+            <h3>Movie Search</h3>
+        </div>
+
+        <div data-role="content" class="ui-field-contain">
+            <form class="ui-filterable">
+                <input type="text" data-type="search" id="movieSearch" />
+            </form>
+            <ul data-role="listview" data-inset="true" data-filter="true" data-filter-reveal="true" id="movie-list" data-input="#movieSearch"></ul>
+        </div>
+        <div data-role="footer">
+            <h1>&copy; 2017</h1>
+        </div>
+    </div>
+    
+    <!--data display for movie info display-->
+    <div data-role="page" id="info">
+        <div data-role="header">
+            <h1>Movie Info</h1>
+        </div>
+        <!-- /header -->
+        <div role="main" class="ui-content">
+            <p id="text"></p>
+            </p>
+            <a href="#home" data-transition="slide" data-direction="reverse"  class="ui-btn ui-icon-back ui-btn-icon-notext ui-corner-all data-iconpos-right"></a>
+        </div>
+        <!-- /content -->
+        <div data-role="footer">
+            <h1>&copy; 2017</h1>
+        </div>
+    </div>
+
+
+
+    <script>
+        $(document).on('pageinit', '#home', function() {
+            // Please replace API key with your own right away!
+            
+            //a searchable event used to filter data information. 
+            //this was found on the jquery mobile demo website
+            $("#movie-list").on("filterablebeforefilter", function(e, data) {
+                var API_key = '27559d05aaa4d70e0a93c61b3ebe0b1e';
+                
+                //variable for movie-list id
+                var $movieList = $("#movie-list");
+
+                //get input value from search bar
+                var $input = $(data.input),
+                    value = $input.val();
+
+                var url = 'http://api.themoviedb.org/3/',
+                    mode = 'search/multi?query=',
+                    movieName = '&query=' + encodeURI(value),
+                    key = '&api_key=' + API_key;
+
+                //ajax function to pull information
+                $.ajax({
+                    url: url + mode + movieName + key,
+                    dataType: "jsonp",
+                    async: true,
+                    success: parseJSONP,
+                    error: function(request, error) {
+                        alert('Network error has occurred please try again!');
+                    }
+                });
+
+                //loops through each search results
+                function parseJSONP(result) {
+                    var obj = result.results;
+                    for (var i = 0; i < obj.length; i++) {
+                        addToList(obj[i]);
+                    }
+
+                }
+
+                function addToList(obj) {
+                    var originalName = obj.original_name;
+                    
+                    //the following if statement is used for checking of the movie had attribute
+                    //of actors and what movies they're known for.
+                    //if this property exists then it will display the following movies.
+                    if (obj.hasOwnProperty("known_for")) {
+                        for (var j = 0; j < obj.known_for.length; j++) {
+                            
+                            //variables used to show get the necessary information
+                            var a = obj.known_for[j].poster_path;
+                            var b = obj.known_for[j].original_title;
+                            var c = parseFloat(obj.known_for[j].popularity).toFixed(2);
+                            var d = obj.known_for[j].overview;
+
+                            if (a === null) {
+                                a = "img/no_image.jpg";
+                                $movieList.append('<li><a href="#info" class="info" data-transition="slide"><img src="'+a+'"/><h3>'+b+'</h3><p>'+d+'</p><p style="display:none">'+c+'</p></a></li>');
+                            }
+                            else {
+                                $movieList.append('<li><a href="#info" class="info" data-transition="slide"><img src="http://image.tmdb.org/t/p/w92'+a+'"/><h3>'+b+'</h3><p>'+d+'</p><p style="display:none">'+c+'</p></a></li>');
+                            }
+
+                        }
+                    }
+                    else {
+                        //sets the image to a white blank image if posterpath is blank and doesn't have original title overview
+                        if (obj.poster_path === null && obj.hasOwnProperty("original_name")) {
+                            $movieList.append('<li><a href="#info" class="info" data-transition="slide"><img src="img/no_image.jpg"/><h3>'+originalName+" (TV Series)"+'</h3><p>'+ obj.overview+
+                            '</p><p style="display:none">Popularity: '+parseFloat(obj.popularity.toFixed(2))+'</p></a></li>');
+                        }
+                        //sets image if doesn't equal null but doesn have a movie title therefore needs to use original name property
+                        else if (obj.poster_path !== null && obj.hasOwnProperty("original_name")) {
+                            $movieList.append('<li><a href="#info" class="info" data-transition="slide"><img src="http://image.tmdb.org/t/p/w92'+obj.poster_path+'"/><h3>'+originalName+" (TV Series)"+'</h3><p>'+obj.overview+
+                            '</p><p style="display:none">Popularity: '+parseFloat(obj.popularity.toFixed(2))+'</p></a></li>');
+                        }
+                        //if movie has an image source and movie has original title/
+                        else {
+                            $movieList.append('<li><a href="#info" class="info" data-transition="slide"><img src="http://image.tmdb.org/t/p/w92'+obj.poster_path+'"/><h3>'+obj.original_title+'</h3><p>'+obj.overview+
+                                '</p><p style="display:none">Popularity: '+parseFloat(obj.popularity.toFixed(2))+'</p><a/></li>');
+                        }
+                    }
+                    //refresh the listview
+                    $movieList.listview("refresh");
+                    
+                    //had to remove this class because the event filterablebeforefilter would automatically
+                    //hide some child elements and autmatically add the class ui-screen-hidden
+                    //therefore not displaying all results. 
+                    $("li").removeClass("ui-screen-hidden");
+            
+                }
+                // added the class 'info' to all li>a elements, to get a track of which element was clicked.
+                $(document).on('click', '.info', function(e) {
+                    var $movie = $(this); // selecting the clicked movie DOM element
+                    console.log($movie);
+                    // .children attr of movie returns all the html tags and their attrs inside the selected
+                        $('#text').html('<div style="position:relative;width:10%;float:left"><img src="' +
+                            $movie[0].children[0].currentSrc +
+                            '"/ "></div><div style="position:relative;width:90%;float:right"><h3>' +
+                            $movie[0].children[1].innerHTML + '</h3><p>' +
+                            $movie[0].children[2].innerHTML + '</p><div>' +
+                            $movie[0].children[3].innerHTML + '</p></div>');
+                });
+                //necesarry to refresh the movie list or else all previous searched 
+                //movies will appear after clearing the search bar and re-entering a new title/actor
+                $movieList.empty();
+            });
+        });
+    </script>
+</body>
+</html>
